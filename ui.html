@@ -368,7 +368,7 @@
         async function fetchDistricts() {
             try {
                 console.log('Fetching districts...');
-                const response = await fetch('http://localhost:3000/api/districts');
+                const response = await fetch('https://inspection-uploader.onrender.com/api/districts');
                 console.log('Districts response status:', response.status);
 
                 if (response.ok) {
@@ -387,7 +387,7 @@
         async function fetchSchools(district) {
             try {
                 console.log('Fetching schools for district:', district);
-                const response = await fetch(`http://localhost:3000/api/schools/${encodeURIComponent(district)}`);
+                const response = await fetch(`https://inspection-uploader.onrender.com/api/schools/${encodeURIComponent(district)}`);
                 console.log('Schools response status:', response.status);
 
                 if (response.ok) {
@@ -624,7 +624,7 @@
             resultDiv.style.display = 'none';
 
             try {
-                const response = await fetch('http://localhost:3000/upload', {
+                const response = await fetch('https://inspection-uploader.onrender.com/upload', {
                     method: 'POST',
                     body: formData,
                 });
