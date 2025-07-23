@@ -1,0 +1,28 @@
+{
+  "name": "uploader",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/KenCariquitan/uploader.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/KenCariquitan/uploader/issues"
+  },
+  "homepage": "https://github.com/KenCariquitan/uploader#readme",
+  "description": "",
+  "type": "module",
+  "dependencies": {
+    "dotenv": "^17.2.0",
+    "express": "^5.1.0",
+    "googleapi": "^1.0.2",
+    "googleapis": "^153.0.0",
+    "multer": "^2.0.1"
+  }
+}

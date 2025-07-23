@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Photo Upload to Google Drive</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #ff8a05 0%, #ec7c00 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .title-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            /* space between image and h1 */
+        }
+
+        .logo {
+            height: 80px;
+            width: auto;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 1.5em;
+        }
+
+        .header p {
+            margin-top: 8px;
+        }   
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+            width: 100%;
+            max-width: 500px;
+            transition: transform 0.3s ease;
+        }
+
+        .container:hover {
+            transform: translateY(-5px);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: #333;
+            font-size: 1.76em;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 1.1em;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+            position: relative;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 500;
+            font-size: 1.1em;
+        }
+
+        .input-container {
+            position: relative;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 15px 20px;
+            border: 2px solid #e1e5e9;
+            border-radius: 12px;
+            font-size: 1em;
+            transition: all 0.3s ease;
+            background: white;
+            outline: none;
+        }
+
+        .form-control:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .suggestions {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #e1e5e9;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            max-height: 150px;
+            overflow-y: auto;
+            z-index: 1000;
+            display: none;
+        }
+
+        .suggestion-item {
+            padding: 12px 16px;
+            cursor: pointer;
+            border-bottom: 1px solid #f0f0f0;
+            transition: background-color 0.2s ease;
+        }
+
+        .suggestion-item:hover {
+            background-color: #f8f9fa;
+        }
+
+        .suggestions.loading {
+            padding: 12px 16px;
+            text-align: center;
+            color: #666;
+        }
+
+        .suggestions.loading::before {
+            content: "";
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 8px;
+        }
+
+        .file-input-container {
+            position: relative;
+            display: inline-block;
+            width: 100%;
+        }
+
+        .file-input {
+            position: absolute;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+
+        .file-input-label {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            border: 2px dashed #ccc;
+            border-radius: 12px;
+            background: #f9f9f9;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-height: 80px;
+        }
+
+        .file-input-label:hover {
+            border-color: #667eea;
+            background: #f0f4ff;
+        }
+
+        .file-input-label.dragover {
+            border-color: #667eea;
+            background: #e8f0fe;
+        }
+
+        .file-icon {
+            font-size: 2em;
+            margin-right: 10px;
+            color: #667eea;
+        }
+
+        .file-text {
+            text-align: center;
+            color: #666;
+        }
+
+        .selected-files {
+            margin-top: 15px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            display: none;
+        }
+
+        .selected-files h4 {
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .file-list {
+            list-style: none;
+        }
+
+        .file-item {
+            padding: 5px 0;
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        .upload-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #ff8a05 0%, #ec7c00 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .upload-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+
+        .upload-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .result {
+            margin-top: 25px;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: 500;
+            display: none;
+        }
+
+        .result.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .result.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 25px;
+                margin: 10px;
+            }
+
+            .header h1 {
+                font-size: 1.8em;
+            }
+
+            .form-control {
+                padding: 12px 15px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="title-row">
+                <img src="/logo.png" alt="Logo"
+                    class="logo" />
+                <h1>Inspection Photos Upload</h1>
+            </div>
+            <p>Upload photos to Google Drive by school district</p>
+        </div>
+
+        <form id="uploadForm" enctype="multipart/form-data">
+            <div class="form-group">
+                <label for="district">School District</label>
+                <div class="input-container">
+                    <input type="text" id="district" name="district" class="form-control"
+                        placeholder="Enter district name" required>
+                    <div id="districtSuggestions" class="suggestions"></div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="school">School Name</label>
+                <div class="input-container">
+                    <input type="text" id="school" name="school" class="form-control" placeholder="Enter school name"
+                        required>
+                    <div id="schoolSuggestions" class="suggestions"></div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Select Photos</label>
+                <div class="file-input-container">
+                    <input type="file" id="photos" name="photos" class="file-input" multiple accept="image/*" required>
+                    <label for="photos" class="file-input-label">
+                        <div class="file-icon">📁</div>
+                        <div class="file-text">
+                            <strong>Click to select photos</strong><br>
+                            <small>or drag and drop files here</small>
+                        </div>
+                    </label>
+                </div>
+                <div id="selectedFiles" class="selected-files">
+                    <h4>Selected Files:</h4>
+                    <ul id="fileList" class="file-list"></ul>
+                </div>
+            </div>
+
+            <button type="submit" class="upload-btn">
+                <span id="uploadText">Upload Photos</span>
+            </button>
+        </form>
+
+        <div id="result" class="result"></div>
+    </div>
+
+    <script>
+        // API functions for fetching real data
+        async function fetchDistricts() {
+            try {
+                console.log('Fetching districts...');
+                const response = await fetch('http://localhost:3000/api/districts');
+                console.log('Districts response status:', response.status);
+
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log('Districts data:', data);
+                    return data;
+                }
+                console.error('Districts fetch failed:', response.status, response.statusText);
+                return [];
+            } catch (error) {
+                console.error('Error fetching districts:', error);
+                return [];
+            }
+        }
+
+        async function fetchSchools(district) {
+            try {
+                console.log('Fetching schools for district:', district);
+                const response = await fetch(`http://localhost:3000/api/schools/${encodeURIComponent(district)}`);
+                console.log('Schools response status:', response.status);
+
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log('Schools data:', data);
+                    return data;
+                }
+                console.error('Schools fetch failed:', response.status, response.statusText);
+                return [];
+            } catch (error) {
+                console.error('Error fetching schools:', error);
+                return [];
+            }
+        }
+
+        // Cache for performance
+        let districtCache = null;
+        let schoolCache = {};
+
+        // Test function to check if APIs are working
+        async function testAPIs() {
+            console.log('Testing API endpoints...');
+
+            // Test districts endpoint
+            try {
+                const districts = await fetchDistricts();
+                console.log('Districts test result:', districts);
+            } catch (error) {
+                console.error('Districts test failed:', error);
+            }
+        }
+
+        const form = document.getElementById('uploadForm');
+        const resultDiv = document.getElementById('result');
+        const uploadBtn = document.querySelector('.upload-btn');
+        const uploadText = document.getElementById('uploadText');
+        const fileInput = document.getElementById('photos');
+        const fileLabel = document.querySelector('.file-input-label');
+        const selectedFilesDiv = document.getElementById('selectedFiles');
+        const fileList = document.getElementById('fileList');
+
+        // File handling
+        fileInput.addEventListener('change', handleFileSelect);
+        fileLabel.addEventListener('dragover', handleDragOver);
+        fileLabel.addEventListener('drop', handleDrop);
+        fileLabel.addEventListener('dragenter', () => fileLabel.classList.add('dragover'));
+        fileLabel.addEventListener('dragleave', () => fileLabel.classList.remove('dragover'));
+
+        function handleFileSelect(e) {
+            updateFileList(e.target.files);
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            fileLabel.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            fileInput.files = files;
+            updateFileList(files);
+        }
+
+        function updateFileList(files) {
+            fileList.innerHTML = '';
+            if (files.length > 0) {
+                selectedFilesDiv.style.display = 'block';
+                Array.from(files).forEach(file => {
+                    const li = document.createElement('li');
+                    li.className = 'file-item';
+                    li.textContent = `📷 ${file.name}`;
+                    fileList.appendChild(li);
+                });
+            } else {
+                selectedFilesDiv.style.display = 'none';
+            }
+        }
+
+        // Enhanced autocomplete functionality with API calls
+        function setupAutocomplete(inputId, suggestionsId, dataSourceFunction) {
+            const input = document.getElementById(inputId);
+            const suggestions = document.getElementById(suggestionsId);
+            let currentRequest = null;
+            let debounceTimer = null;
+
+            input.addEventListener('input', async (e) => {
+                const value = e.target.value.trim();
+
+                // Clear previous debounce timer
+                if (debounceTimer) {
+                    clearTimeout(debounceTimer);
+                }
+
+                // Cancel previous request if still pending
+                if (currentRequest) {
+                    currentRequest.abort();
+                }
+
+                suggestions.innerHTML = '';
+                suggestions.style.display = 'none';
+
+                if (value.length > 0) {
+                    // Debounce the input to avoid too many API calls
+                    debounceTimer = setTimeout(async () => {
+                        try {
+                            // Show loading indicator
+                            suggestions.innerHTML = '<div style="padding: 12px 16px; text-align: center; color: #666;">Loading...</div>';
+                            suggestions.style.display = 'block';
+
+                            // Create AbortController for this request
+                            const controller = new AbortController();
+                            currentRequest = controller;
+
+                            console.log(`Getting suggestions for ${inputId}:`, value);
+                            const matches = await dataSourceFunction(value, controller.signal);
+                            console.log(`Matches found for ${inputId}:`, matches);
+
+                            // Check if request was aborted
+                            if (controller.signal.aborted) return;
+
+                            suggestions.innerHTML = ''; // Clear loading
+
+                            if (matches && matches.length > 0) {
+                                matches.forEach(match => {
+                                    const div = document.createElement('div');
+                                    div.className = 'suggestion-item';
+                                    div.textContent = match;
+                                    div.addEventListener('click', () => {
+                                        input.value = match;
+                                        suggestions.style.display = 'none';
+                                        if (inputId === 'district') {
+                                            // Clear school field when district changes
+                                            document.getElementById('school').value = '';
+                                            // Clear school cache for this district
+                                            delete schoolCache[match];
+                                        }
+                                    });
+                                    suggestions.appendChild(div);
+                                });
+                                suggestions.style.display = 'block';
+                            } else {
+                                suggestions.innerHTML = '<div style="padding: 12px 16px; text-align: center; color: #999;">No matches found</div>';
+                                suggestions.style.display = 'block';
+                            }
+                        } catch (error) {
+                            if (error.name !== 'AbortError') {
+                                console.error('Autocomplete error:', error);
+                                suggestions.innerHTML = '<div style="padding: 12px 16px; text-align: center; color: #999;">Error loading suggestions</div>';
+                                suggestions.style.display = 'block';
+                            }
+                        }
+                    }, 300); // 300ms debounce
+                }
+            });
+
+            // Hide suggestions when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!input.contains(e.target) && !suggestions.contains(e.target)) {
+                    suggestions.style.display = 'none';
+                }
+            });
+        }
+
+        // Setup autocomplete for district with API
+        setupAutocomplete('district', 'districtSuggestions', async (value, signal) => {
+            console.log('District autocomplete called with value:', value);
+
+            // Use cache if available
+            if (!districtCache) {
+                console.log('Loading districts from API...');
+                districtCache = await fetchDistricts();
+                console.log('Cached districts:', districtCache);
+            }
+
+            if (!districtCache || districtCache.length === 0) {
+                console.log('No districts available');
+                return [];
+            }
+
+            const filtered = districtCache.filter(district =>
+                district.toLowerCase().includes(value.toLowerCase())
+            );
+            console.log('Filtered districts for "' + value + '":', filtered);
+
+            return filtered;
+        });
+
+        // Setup autocomplete for school with API (depends on district)
+        setupAutocomplete('school', 'schoolSuggestions', async (value, signal) => {
+            const district = document.getElementById('district').value.trim();
+            console.log('School autocomplete called with value:', value, 'district:', district);
+
+            if (!district) {
+                console.log('No district selected, returning empty array');
+                return [];
+            }
+
+            // Use cache if available
+            if (!schoolCache[district]) {
+                console.log('Loading schools from API for district:', district);
+                schoolCache[district] = await fetchSchools(district);
+                console.log('Cached schools for', district, ':', schoolCache[district]);
+            }
+
+            if (!schoolCache[district] || schoolCache[district].length === 0) {
+                console.log('No schools available for district:', district);
+                return [];
+            }
+
+            const filtered = schoolCache[district].filter(school =>
+                school.toLowerCase().includes(value.toLowerCase())
+            );
+            console.log('Filtered schools for "' + value + '":', filtered);
+
+            return filtered;
+        });
+
+        // Pre-load districts on page load
+        window.addEventListener('load', async () => {
+            console.log('Page loaded, pre-loading districts...');
+            await testAPIs();
+        });
+
+        // Form submission
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const formData = new FormData(form);
+
+            // Show loading state
+            uploadBtn.disabled = true;
+            uploadText.innerHTML = '<span class="loading"></span>Uploading...';
+            resultDiv.style.display = 'none';
+
+            try {
+                const response = await fetch('http://localhost:3000/upload', {
+                    method: 'POST',
+                    body: formData,
+                });
+
+                const text = await response.text();
+
+                // Show result
+                resultDiv.textContent = text;
+                resultDiv.className = response.ok ? 'result success' : 'result error';
+                resultDiv.style.display = 'block';
+
+                if (response.ok) {
+                    form.reset();
+                    updateFileList([]);
+                }
+            } catch (err) {
+                resultDiv.textContent = '❌ Upload failed. Please try again.';
+                resultDiv.className = 'result error';
+                resultDiv.style.display = 'block';
+                console.error(err);
+            } finally {
+                // Reset button state
+                uploadBtn.disabled = false;
+                uploadText.textContent = 'Upload Photos';
+            }
+        });
+
+        const loginPassword = "yourSecret123"; // 🔐 Change this to your actual passcode
+
+        function checkLogin() {
+            const entered = document.getElementById('loginPassword').value;
+            if (entered === loginPassword) {
+                document.getElementById('loginDiv').style.display = 'none';
+                document.getElementById('uploadSection').style.display = 'block';
+            } else {
+                document.getElementById('loginError').textContent = "❌ Incorrect password.";
+            }
+        }
+    </script>
+</body>
+
+</html>
