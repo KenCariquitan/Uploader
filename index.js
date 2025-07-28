@@ -49,12 +49,28 @@ app.get('/auth', (req, res) => {
 });
 
 app.get('/oauth2callback', async (req, res) => {
-  const { code } = req.query;
-  const { tokens } = await oauth2Client.getToken(code);
-  oauth2Client.setCredentials(tokens);
-  console.log("🔑 REFRESH TOKEN:", tokens.refresh_token);
-  res.send("✅ Authorization complete. You can now upload files.");
-}); 
+  const code = req.query.code;
+
+  if (!code) {
+    console.error('❌ No "code" found in query params.');
+    return res.status(400).send('Missing authorization code in request.');
+  }
+
+  try {
+    console.log('🔁 Exchanging code for token...');
+    const { tokens } = await oauth2Client.getToken(code);
+    oauth2Client.setCredentials(tokens);
+
+    console.log("✅ Access Token:", tokens.access_token);
+    console.log("🔑 Refresh Token:", tokens.refresh_token); // IMPORTANT: Save this token to token.env
+
+    res.send("✅ Authorization complete. Copy the refresh token from the console.");
+  } catch (err) {
+    console.error('❌ Error getting tokens:', err.response?.data || err.message);
+    res.status(500).send('OAuth failed: ' + (err.response?.data?.error_description || err.message));
+  }
+});
+
 
 // === HELPER: Create or Get Folder ===
 async function getOrCreateFolder(name, parentId) {
