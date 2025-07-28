@@ -19,6 +19,7 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
 const upload = multer({ dest: 'uploads/' }); // Store temp files here
+import { authenticate } from '@google-cloud/local-auth';
 // === CONFIG ===
 const CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
 const CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
