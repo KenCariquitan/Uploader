@@ -19,13 +19,15 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
 const upload = multer({ dest: 'uploads/' }); // Store temp files here
-
+const { authenticate } = require('@google-cloud/local-auth');
 // === CONFIG ===
 const CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
 const CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
-const REDIRECT_URI = 'http://localhost:3000/oauth2callback';
+const REDIRECT_URI = 'https://inspection-uploader.onrender.com/oauth2callback'; 
 const REFRESH_TOKEN = process.env.GOOGLE_REFRESH_TOKEN;
 const ROOT_FOLDER_ID = process.env.ROOT_FOLDER_ID;  // This is your main Google Drive folder ID
+
+
 
 // === GOOGLE AUTH ===
 const oauth2Client = new google.auth.OAuth2(CLIENT_ID, CLIENT_SECRET, REDIRECT_URI);
@@ -52,7 +54,7 @@ app.get('/oauth2callback', async (req, res) => {
   oauth2Client.setCredentials(tokens);
   console.log("🔑 REFRESH TOKEN:", tokens.refresh_token);
   res.send("✅ Authorization complete. You can now upload files.");
-});
+}); 
 
 // === HELPER: Create or Get Folder ===
 async function getOrCreateFolder(name, parentId) {
@@ -190,7 +192,7 @@ app.post('/upload', upload.array('photos', 10), async (req, res) => {
   }
 });
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 10000 ;
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
