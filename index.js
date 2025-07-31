@@ -22,7 +22,7 @@ const upload = multer({ dest: 'uploads/' }); // Store temp files here
 const CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
 const CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
 const REDIRECT_URI = 'https://inspection-uploader.onrender.com/oauth2callback'; 
-const REFRESH_TOKEN = null;
+const REFRESH_TOKEN = process.env.GOOGLE_REFRESH_TOKEN;
 const ROOT_FOLDER_ID = process.env.ROOT_FOLDER_ID;  // This is your main Google Drive folder ID
 
 
