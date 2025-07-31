@@ -21,7 +21,7 @@ const upload = multer({ dest: 'uploads/' }); // Store temp files here
 // === CONFIG ===
 const CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
 const CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
-const REDIRECT_URI = 'https://inspection-uploader.onrender.com/oauth2callback'; 
+const REDIRECT_URI = 'https://inspection-uploader.onrender.com/oauth2callback';
 const REFRESH_TOKEN = process.env.GOOGLE_REFRESH_TOKEN;
 const ROOT_FOLDER_ID = process.env.ROOT_FOLDER_ID;  // This is your main Google Drive folder ID
 
@@ -47,26 +47,11 @@ app.get('/auth', (req, res) => {
 });
 
 app.get('/oauth2callback', async (req, res) => {
-  const code = req.query.code;
-
-  if (!code) {
-    console.error('❌ No "code" found in query params.');
-    return res.status(400).send('Missing authorization code in request.');
-  }
-
-  try {
-    console.log('🔁 Exchanging code for token...');
-    const { tokens } = await oauth2Client.getToken(code);
-    oauth2Client.setCredentials(tokens);
-
-    console.log("✅ Access Token:", tokens.access_token);
-    console.log("🔑 Refresh Token:", tokens.refresh_token); // IMPORTANT: Save this token to token.env
-
-    res.send("✅ Authorization complete. Copy the refresh token from the console.");
-  } catch (err) {
-    console.error('❌ Error getting tokens:', err.response?.data || err.message);
-    res.status(500).send('OAuth failed: ' + (err.response?.data?.error_description || err.message));
-  }
+  const { code } = req.query;
+  const { tokens } = await oauth2Client.getToken(code);
+  oauth2Client.setCredentials(tokens);
+  console.log("🔑 REFRESH TOKEN:", tokens.refresh_token);
+  res.send("✅ Authorization complete. You can now upload files.");
 });
 
 
@@ -96,7 +81,7 @@ async function getOrCreateFolder(name, parentId) {
 app.get('/api/districts', async (req, res) => {
   try {
     console.log('API: Fetching districts from ROOT_FOLDER_ID:', ROOT_FOLDER_ID);
-    
+
     if (!ROOT_FOLDER_ID) {
       return res.status(500).json({ error: 'ROOT_FOLDER_ID not configured' });
     }
@@ -105,11 +90,11 @@ app.get('/api/districts', async (req, res) => {
       q: `'${ROOT_FOLDER_ID}' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false`,
       fields: 'files(name)'
     });
-    
+
     console.log('API: Districts result:', result.data.files);
     const districts = result.data.files.map(file => file.name);
     console.log('API: Sending districts:', districts);
-    
+
     res.json(districts);
   } catch (error) {
     console.error('API: Error fetching districts:', error);
@@ -122,7 +107,7 @@ app.get('/api/schools/:district', async (req, res) => {
   try {
     const districtName = decodeURIComponent(req.params.district);
     console.log('API: Fetching schools for district:', districtName);
-    
+
     if (!ROOT_FOLDER_ID) {
       return res.status(500).json({ error: 'ROOT_FOLDER_ID not configured' });
     }
@@ -130,10 +115,10 @@ app.get('/api/schools/:district', async (req, res) => {
     // First, find the district folder
     const districtQuery = `'${ROOT_FOLDER_ID}' in parents and name='${districtName}' and mimeType='application/vnd.google-apps.folder' and trashed=false`;
     console.log('API: District query:', districtQuery);
-    
-    const districtResult = await drive.files.list({ 
-      q: districtQuery, 
-      fields: 'files(id, name)' 
+
+    const districtResult = await drive.files.list({
+      q: districtQuery,
+      fields: 'files(id, name)'
     });
 
     console.log('API: District result:', districtResult.data.files);
@@ -145,17 +130,17 @@ app.get('/api/schools/:district', async (req, res) => {
 
     const districtId = districtResult.data.files[0].id;
     console.log('API: District ID:', districtId);
-    
+
     // Then get schools in that district
     const schoolsResult = await drive.files.list({
       q: `'${districtId}' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false`,
       fields: 'files(name)'
     });
-    
+
     console.log('API: Schools result:', schoolsResult.data.files);
     const schools = schoolsResult.data.files.map(file => file.name);
     console.log('API: Sending schools:', schools);
-    
+
     res.json(schools);
   } catch (error) {
     console.error('API: Error fetching schools:', error);
@@ -206,7 +191,7 @@ app.post('/upload', upload.array('photos', 10), async (req, res) => {
   }
 });
 
-const PORT = process.env.PORT || 10000 ;
+const PORT = process.env.PORT || 10000;
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
