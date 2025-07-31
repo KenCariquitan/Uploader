@@ -6,7 +6,6 @@ import dotenv from 'dotenv';
 import { google } from 'googleapis';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
-import { authenticate } from '@google-cloud/local-auth';
 dotenv.config({ path: './token.env' });
 
 // Add these lines for ES module __dirname support
@@ -19,12 +18,11 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
 const upload = multer({ dest: 'uploads/' }); // Store temp files here
-import { authenticate } from '@google-cloud/local-auth';
 // === CONFIG ===
 const CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
 const CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
 const REDIRECT_URI = 'https://inspection-uploader.onrender.com/oauth2callback'; 
-const REFRESH_TOKEN = process.env.GOOGLE_REFRESH_TOKEN;
+const REFRESH_TOKEN = null;
 const ROOT_FOLDER_ID = process.env.ROOT_FOLDER_ID;  // This is your main Google Drive folder ID
 
 
