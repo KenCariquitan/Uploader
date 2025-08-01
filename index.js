@@ -37,24 +37,6 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'ui.html'));
 });
 
-// === AUTH ROUTES (ONE-TIME) ===
-app.get('/auth', (req, res) => {
-  const authUrl = oauth2Client.generateAuthUrl({
-    access_type: 'offline',
-    scope: ['https://www.googleapis.com/auth/drive.file'],
-  });
-  res.redirect(authUrl);
-});
-
-app.get('/oauth2callback', async (req, res) => {
-  const { code } = req.query;
-  const { tokens } = await oauth2Client.getToken(code);
-  oauth2Client.setCredentials(tokens);
-  console.log("🔑 REFRESH TOKEN:", tokens.refresh_token);
-  res.send("✅ Authorization complete. You can now upload files.");
-});
-
-
 // === HELPER: Create or Get Folder ===
 async function getOrCreateFolder(name, parentId) {
   const q = `'${parentId}' in parents and name='${name}' and mimeType='application/vnd.google-apps.folder' and trashed=false`;
