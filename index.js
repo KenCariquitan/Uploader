@@ -170,6 +170,8 @@ app.post('/upload', upload.array('photos', 10), async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).send('❌ Upload failed');
+
+    console.error("Full error details:", error.response?.data || error.message);
   }
 });
 
